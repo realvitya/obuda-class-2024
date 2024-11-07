@@ -1,0 +1,6 @@
+# Use minimum Python 3.10!
+scrapli
+scrapli_community
+jinja2
+# on windows, ensure you have Python 3.10, otherwise the following might not work as there is no newer windows binary!
+ssh2-python; platform_system == "Windows"

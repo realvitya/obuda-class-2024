@@ -1,0 +1,13 @@
+vtp mode transparent
+vlan 100
+ private-vlan primary
+vlan 201
+ private-vlan isolated
+vlan 100
+ private-vlan association 201
+interface g0/1
+ switchport mode private-vlan promiscuous
+ switchport private-vlan mapping 100 add 201
+interface range g0/2-7
+ switchport mode private-vlan host
+ switchport private-vlan host-association 100 201

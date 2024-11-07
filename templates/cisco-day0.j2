@@ -1,0 +1,21 @@
+vtp mode transparent
+spanning-tree portfast default
+
+vlan 100
+ no private-vlan primary
+
+vrf definition mgmt
+
+interface g0/8
+ description mgmt IP
+ no switchport
+ vrf forwarding mgmt
+ ip address 192.168.1.200 255.255.255.0
+
+interface vlan100
+ description mgmt IP in dataplane - do not do in production!
+ ip address 192.168.1.200 255.255.255.0
+
+interface range g0/1-7
+ switchport mode access
+ switchport access vlan 100

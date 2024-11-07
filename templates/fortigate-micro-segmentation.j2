@@ -1,0 +1,10 @@
+config system proxy-arp
+    edit 1
+	set interface {{ interface }}
+	set ip {{ start_ip }}
+	set end-ip {{ end_ip }}
+    next
+end
+config system global
+    set allow-traffic-redirect disable
+end
