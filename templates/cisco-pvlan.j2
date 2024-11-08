@@ -1,13 +1,13 @@
 vtp mode transparent
-vlan 100
+vlan {{ primary_vlan }}
  private-vlan primary
-vlan 201
+vlan {{ isolated_vlan }}
  private-vlan isolated
-vlan 100
- private-vlan association 201
-interface g0/1
+vlan {{ primary_vlan }}
+ private-vlan association {{ isolated_vlan }}
+interface {{ fw_port }}
  switchport mode private-vlan promiscuous
- switchport private-vlan mapping 100 add 201
-interface range g0/2-7
+ switchport private-vlan mapping {{ primary_vlan }} add {{ isolated_vlan }}
+interface {{ data_port }}
  switchport mode private-vlan host
- switchport private-vlan host-association 100 201
+ switchport private-vlan host-association {{ primary_vlan }} {{ isolated_vlan }}

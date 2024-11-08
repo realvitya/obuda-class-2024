@@ -1,10 +1,41 @@
 config system proxy-arp
     edit 1
-	set interface {{ interface }}
-	set ip {{ start_ip }}
-	set end-ip {{ end_ip }}
+    set interface {{ interface }}
+    set ip {{ start_ip }}
+    set end-ip {{ end_ip }}
     next
 end
 config system global
     set allow-traffic-redirect disable
 end
+config firewall address
+    edit "HMS"
+        set subnet 192.168.1.10/32
+    next
+    edit "OT"
+        set subnet 192.168.1.2/32
+    next
+end
+config firewall policy
+    edit 1
+        set srcintf "port1"
+        set srcaddr "HMS"
+        set dstintf "port1"
+        set dstaddr "OT"
+        set service "PING" "TELNET"
+        set action accept
+        set schedule always
+    next
+end
+
+{% if static_arp %}
+config system arp-table
+{% for arp in arps %}
+    edit 0
+        set interface {{ arp.interface }}
+        set ip {{ arp.ip }}
+        set mac {{ arp.mac }}
+    next
+{% endfor %}
+end
+{% endif %}

@@ -1,6 +1,29 @@
+config system global
+    set hostname {{ hostname }}
+    set alias {{ hostname }}
+end
+config system virtual-switch
+    edit "lan"
+        set physical-switch "sw0"
+        config port
+            delete {{ interface }}
+        end
+    next
+end
+config system dhcp server
+delete 1
+delete 2
+delete 3
+end
 config system interface
+    edit mgmt
+        unset ip
+    next
     edit port1
         set ip {{ ip }}
-        set allowaccess ssh https
+        set allowaccess ssh https ping
     next
+end
+config firewall policy
+delete 1
 end
