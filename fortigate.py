@@ -81,17 +81,21 @@ def config_segmentation(args: Namespace) -> None:
     template = jinja_env.get_template("fortigate-micro-segmentation.j2")
     config = template.render(**data)
     firewall_data = {
-        # "transport": "ssh2",
+        "platform": "fortinet_fortios",
         "host": ip,
         "auth_username": args.user,
         "auth_password": args.password,
         "auth_strict_key": False,
         "ssh_config_file": True,
-        # "channel_log": "fw.log",
+        "channel_log": "fw.log",
     }
-    if args.test:
+    if sys.platform == "win32":
+        firewall_data["transport"] = "ssh2"
+    if args.test and not args.static_arp:
+        config = template.render(**data)
         print(config)
         return
+
     print(f"Connecting to {ip}...")
     with Scrapli(**firewall_data) as conn:
         if args.static_arp:
