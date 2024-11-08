@@ -53,7 +53,7 @@ def main(argv=None):
         generate_day0(args)
     elif args.task == "segmentation":
         if args.password is None and not args.test:
-            args.password = getpass("FW password: ")
+            args.password = getpass("SW password: ")
         config_segmentation(args)
 
 
@@ -91,17 +91,19 @@ def config_segmentation(args: Namespace) -> None:
     template = jinja_env.get_template("cisco-pvlan.j2")
     config = template.render(**data)
     switch_data = {
-        # "transport": "ssh2",
+        "platform": "cisco_iosxe",
         "host": ip,
         "auth_username": args.user,
         "auth_password": args.password,
         "auth_strict_key": False,
         "ssh_config_file": True,
-        # "channel_log": "fw.log",
+        "channel_log": "sw.log",
     }
     if args.test:
         print(config)
         return
+    if "win" in sys.platform:
+        switch_data["transport"] = "ssh2"
     print(f"Connecting to {ip}...")
     with Scrapli(**switch_data) as conn:
         print("Sending configuration...")
