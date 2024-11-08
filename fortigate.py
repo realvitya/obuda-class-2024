@@ -7,7 +7,7 @@ from ipaddress import IPv4Interface
 from os import getenv
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
-from scrapli_community.fortinet.fortios.fortinet_fortios import FortinetFortiOSDriver
+from scrapli import Scrapli
 
 if sys.version_info < (3, 10):  # Check if Python version is less than 3.10
     print("Python 3.10 or higher is required.")
@@ -37,13 +37,14 @@ def main(argv=None):
     day0_parser.add_argument("--hostname", "-host", help="Firewall hostname", default="FW")
     micro_parser = tasks.add_parser("segmentation", help="Setup micro segmentation")
     micro_parser.add_argument("--test", "-t", help="Test mode", action="store_true")
+    seg_parser.add_argument("--static_arp", "-a", help="Fix ARP table", action="store_true")
     args = parser.parse_args(argv)
 
     match args.task:
         case "day0":
             return generate_day0(args)
         case "segmentation":
-            if args.password is None and not args.test:
+            if args.password is None and (not args.test or args.static_arp):
                 args.password = getpass("FW password: ")
             return config_segmentation(args)
 
@@ -92,7 +93,22 @@ def config_segmentation(args: Namespace) -> None:
         print(config)
         return
     print(f"Connecting to {ip}...")
-    with FortinetFortiOSDriver(**firewall_data) as conn:
+    with Scrapli(**firewall_data) as conn:
+        if args.static_arp:
+            print("Gathering ARP table")
+            res = conn.send_command("get system arp")
+            args.arps = [
+                {
+                    "ip": arp["ip"],
+                    "mac": arp["mac"],
+                    "interface": arp["interface"],
+                }
+                for arp in res.ttp_parse_output("arp-parse.ttp")[0]
+            ]
+        config = template.render(**data)
+        if args.test:
+            print(config)
+            return
         print("Sending configuration...")
         res = conn.send_commands(config.splitlines(), batch_mode=True)
         if res.failed:

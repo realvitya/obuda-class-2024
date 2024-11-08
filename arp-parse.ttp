@@ -1,0 +1,1 @@
+{{ ip }}  {{ age }} {{ mac }}  {{ interface }}
