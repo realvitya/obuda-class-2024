@@ -12,11 +12,11 @@ interface vlan1
 
 interface {{ fw_port }}
  switchport mode access
- switchport access vlan {{ primary_vlan }}
+ switchport access vlan 1
 
 interface {{ data_port }}
  switchport mode access
- switchport access vlan {{ primary_vlan }}
+ switchport access vlan 1
 
 interface {{ mgmt_port }}
  switchport mode access
