@@ -28,8 +28,19 @@ def main(argv=None):
         None
     """
     parser = ArgumentParser(prog="cisco")
-    parser.add_argument("--switch", "-sw", default=getenv("HOST") or "192.168.1.1/24", help="Switch IP/nm")
-    parser.add_argument("--interface", "-i", default=getenv("INTERFACE") or "port1", help="Switch data interface")
+    parser.add_argument("--ip", default=getenv("HOST") or "192.168.1.200/24", help="Switch IP/nm")
+    parser.add_argument("--mgmt-port", "-m", default=getenv("MGMT_INTERFACE") or "gi0/8", help="Switch mgmt interface")
+    parser.add_argument(
+        "--data-port",
+        "-d",
+        default=getenv("DATA_INTERFACE") or "range gi0/2-7",
+        help="Switch data interface (range ...)",
+    )
+    parser.add_argument(
+        "--fw-port", "-f", default=getenv("FW_INTERFACE") or "gi0/1", help="Switchport firewall is connected to"
+    )
+    parser.add_argument("--primary-vlan", "-pv", default=getenv("PRIMARY_VLAN") or "100", help="Primary VLAN")
+    parser.add_argument("--isolated-vlan", "-iv", default=getenv("ISOLATED_VLAN") or "201", help="Isolated VLAN")
     parser.add_argument("--user", "-u", default=getenv("USER") or "admin", help="Switch username")
     parser.add_argument("--password", "-p", default=getenv("PASSWORD"), help="Switch password")
     tasks = parser.add_subparsers(title="tasks", dest="task", required=True)
@@ -55,6 +66,8 @@ def generate_day0(args: Namespace) -> None:
     Returns:
         None
     """
+    args.netmask = IPv4Interface(args.ip).netmask.compressed
+    args.ip = IPv4Interface(args.ip).ip.compressed
     data = args.__dict__
     template = jinja_env.get_template("cisco-day0.j2")
     output = template.render(**data)
@@ -71,9 +84,9 @@ def config_segmentation(args: Namespace) -> None:
         None
     """
     data = args.__dict__
-    ip = IPv4Interface(args.Switch).ip.compressed
-    args.start_ip = IPv4Interface(args.Switch).network[1]
-    args.end_ip = IPv4Interface(args.Switch).network[-2]
+    ip = IPv4Interface(args.ip).ip.compressed
+    args.start_ip = IPv4Interface(args.ip).network[1]
+    args.end_ip = IPv4Interface(args.ip).network[-2]
 
     template = jinja_env.get_template("cisco-pvlan.j2")
     config = template.render(**data)
