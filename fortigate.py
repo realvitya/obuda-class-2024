@@ -1,5 +1,7 @@
 """FortiGate configuration script"""
 
+import io
+import logging
 import sys
 from argparse import ArgumentParser, Namespace
 from getpass import getpass
@@ -8,6 +10,8 @@ from os import getenv
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from scrapli import Scrapli
+
+# logging.basicConfig(level=logging.DEBUG)  # debug scrapli on console to see what happens
 
 if sys.version_info < (3, 10):  # Check if Python version is less than 3.10
     print("Python 3.10 or higher is required.")
@@ -34,10 +38,10 @@ def main(argv=None):
     parser.add_argument("--password", "-p", default=getenv("PASSWORD"), help="Firewall password")
     tasks = parser.add_subparsers(title="tasks", dest="task", required=True)
     day0_parser = tasks.add_parser("day0", help="Day0 config generation")
-    day0_parser.add_argument("--hostname", "-host", help="Firewall hostname", default="FW")
-    micro_parser = tasks.add_parser("segmentation", help="Setup micro segmentation")
-    micro_parser.add_argument("--test", "-t", help="Test mode", action="store_true")
+    day0_parser.add_argument("--hostname", "-host", help="Firewall hostname", default="FIREWALL")
+    seg_parser = tasks.add_parser("segmentation", help="Setup micro segmentation")
     seg_parser.add_argument("--static_arp", "-a", help="Fix ARP table", action="store_true")
+    seg_parser.add_argument("--test", "-t", help="Test mode", action="store_true")
     args = parser.parse_args(argv)
 
     match args.task:
@@ -74,12 +78,11 @@ def config_segmentation(args: Namespace) -> None:
         None
     """
     data = args.__dict__
-    ip = IPv4Interface(args.firewall).ip.compressed
-    args.start_ip = IPv4Interface(args.firewall).network[1]
-    args.end_ip = IPv4Interface(args.firewall).network[-2]
+    ip = IPv4Interface(args.ip).ip.compressed
+    args.start_ip = IPv4Interface(args.ip).network[1]
+    args.end_ip = IPv4Interface(args.ip).network[-2]
 
     template = jinja_env.get_template("fortigate-micro-segmentation.j2")
-    config = template.render(**data)
     firewall_data = {
         "platform": "fortinet_fortios",
         "host": ip,
